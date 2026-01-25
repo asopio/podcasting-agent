@@ -1,3 +1,0 @@
-[submodule "chatlas-agents"]
-	path = chatlas-agents
-	url = git@github.com:asopio/chatlas-agents.git
