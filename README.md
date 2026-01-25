@@ -1,8 +1,8 @@
 ---
 title: Podcasting Agent
-emoji: 🖼
-colorFrom: purple
-colorTo: red
+emoji: 🎧
+colorFrom: blue
+colorTo: teal
 sdk: gradio
 sdk_version: 5.44.0
 app_file: app.py
