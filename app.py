@@ -80,6 +80,8 @@ with gr.Blocks(css=css) as demo:
             run_button = gr.Button("Run", scale=0, variant="primary")
 
         result = gr.Image(label="Result", show_label=False)
+        result_audio = gr.Audio(label="Result", show_label=False)
+
 
         with gr.Accordion("Advanced Settings", open=False):
             negative_prompt = gr.Text(
