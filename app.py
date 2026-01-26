@@ -1,114 +1,121 @@
 import gradio as gr
-import numpy as np
-import random
 
-# import spaces #[uncomment to use ZeroGPU]
-from diffusers import DiffusionPipeline
-import torch
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model_repo_id = "stabilityai/sdxl-turbo"  # Replace to the model you would like to use
-
-if torch.cuda.is_available():
-    torch_dtype = torch.float16
-else:
-    torch_dtype = torch.float32
-
-pipe = DiffusionPipeline.from_pretrained(model_repo_id, torch_dtype=torch_dtype)
-pipe = pipe.to(device)
-
-MAX_SEED = np.iinfo(np.int32).max
-MAX_IMAGE_SIZE = 1024
-
-
-# @spaces.GPU #[uncomment to use ZeroGPU]
-def infer(
-    prompt,
-    negative_prompt,
-    seed,
-    randomize_seed,
-    progress=gr.Progress(track_tqdm=True),
-):
-    if randomize_seed:
-        seed = random.randint(0, MAX_SEED)
-
-    generator = torch.Generator().manual_seed(seed)
-
-    # image = pipe(
-    #     prompt=prompt,
-    #     negative_prompt=negative_prompt,
-    #     guidance_scale=guidance_scale,
-    #     num_inference_steps=num_inference_steps,
-    #     width=width,
-    #     height=height,
-    #     generator=generator,
-    # ).images[0]
-
-    result = None
-
-    return result, seed
+# Placeholder function for podcast generation
+# This will be replaced with actual LLM and TTS agent implementation
+def generate_podcast(urls_text, progress=gr.Progress(track_tqdm=True)):
+    """
+    Placeholder function for podcast generation.
+    
+    In the future, this will:
+    1. Parse the URLs from the input
+    2. Fetch and summarize articles/papers using LLM
+    3. Generate dialogue from summaries
+    4. Convert dialogue to audio using TTS
+    5. Return the audio file
+    
+    Args:
+        urls_text: Multi-line text containing URLs
+        progress: Gradio progress tracker
+    
+    Returns:
+        Tuple of (status_message, audio_file_path)
+    """
+    if not urls_text or not urls_text.strip():
+        return "⚠️ Please enter at least one URL", None
+    
+    # Parse URLs (split by newlines and filter empty lines)
+    urls = [url.strip() for url in urls_text.strip().split('\n') if url.strip()]
+    
+    if not urls:
+        return "⚠️ Please enter at least one valid URL", None
+    
+    # Placeholder response
+    status_msg = f"✅ UI Ready! Found {len(urls)} URL(s):\n" + "\n".join(f"  • {url}" for url in urls)
+    status_msg += "\n\n⏳ Backend implementation pending (LLM summarization & TTS generation)"
+    
+    return status_msg, None
 
 
 examples = [
-    "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k",
-    "An astronaut riding a green horse",
-    "A delicious ceviche cheesecake slice",
+    "https://arxiv.org/abs/2301.00001\nhttps://example.com/article1",
+    "https://arxiv.org/abs/2312.12345",
+    "https://huggingface.co/blog/example-post\nhttps://medium.com/@example/article",
 ]
 
 css = """
 #col-container {
     margin: 0 auto;
-    max-width: 640px;
+    max-width: 800px;
 }
 """
 
-with gr.Blocks(css=css) as demo:
+with gr.Blocks(css=css, theme=gr.themes.Soft()) as demo:
     with gr.Column(elem_id="col-container"):
-        gr.Markdown(" # Podcasting Agent")
+        gr.Markdown(
+            """
+            # 🎧 Podcasting Agent
+            ### AI-powered podcast generation from articles and papers
+            
+            Enter URLs of articles or papers you want to hear discussed. The AI agent will:
+            1. 📄 Summarize the content using LLM
+            2. 💬 Generate engaging dialogue
+            3. 🎙️ Convert to audio using text-to-speech
+            """
+        )
 
         with gr.Row():
-            prompt = gr.Text(
-                label="Prompt",
-                show_label=False,
-                max_lines=1,
-                placeholder="Enter urls to articles, papers you want to hear discussed...",
-                container=False,
+            urls_input = gr.Textbox(
+                label="Article & Paper URLs",
+                placeholder="Enter URLs, one per line:\nhttps://arxiv.org/abs/...\nhttps://example.com/article\n...",
+                lines=5,
+                max_lines=10,
             )
 
-            run_button = gr.Button("Run", scale=0, variant="primary")
+        with gr.Row():
+            clear_button = gr.Button("Clear", scale=1)
+            generate_button = gr.Button("🎙️ Generate Podcast", scale=2, variant="primary")
 
-        # result = gr.Image(label="Result", show_label=False)
-        result = gr.Audio(label="Result", show_label=False)
+        status_output = gr.Textbox(
+            label="Status",
+            lines=3,
+            max_lines=10,
+            interactive=False,
+        )
+        
+        audio_output = gr.Audio(
+            label="Generated Podcast",
+            type="filepath",
+        )
 
-        with gr.Accordion("Advanced Settings", open=False):
-            negative_prompt = gr.Text(
-                label="Negative prompt",
-                max_lines=1,
-                placeholder="Enter a negative prompt",
-                visible=False,
+        with gr.Accordion("📚 Examples", open=True):
+            gr.Examples(
+                examples=examples,
+                inputs=[urls_input],
+                label="Click to use example URLs"
             )
+        
+        gr.Markdown(
+            """
+            ---
+            **Note:** This is the UI interface. Backend implementation for LLM summarization and TTS is pending.
+            """
+        )
 
-            seed = gr.Slider(
-                label="Seed",
-                minimum=0,
-                maximum=MAX_SEED,
-                step=1,
-                value=0,
-            )
-
-            randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
-
-        gr.Examples(examples=examples, inputs=[prompt])
-    gr.on(
-        triggers=[run_button.click, prompt.submit],
-        fn=infer,
-        inputs=[
-            prompt,
-            negative_prompt,
-            seed,
-            randomize_seed,
-        ],
-        outputs=[result, seed],
+    # Event handlers
+    generate_button.click(
+        fn=generate_podcast,
+        inputs=[urls_input],
+        outputs=[status_output, audio_output],
+    )
+    
+    def clear_form():
+        """Clear all input and output fields."""
+        return "", "", None  # urls_input, status_output, audio_output
+    
+    clear_button.click(
+        fn=clear_form,
+        inputs=[],
+        outputs=[urls_input, status_output, audio_output],
     )
 
 if __name__ == "__main__":
