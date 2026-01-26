@@ -25,6 +25,10 @@ venv/
 ENV/
 env/
 
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
 # IDE
 .vscode/
 .idea/
