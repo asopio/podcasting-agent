@@ -108,8 +108,12 @@ with gr.Blocks(css=css, theme=gr.themes.Soft()) as demo:
         outputs=[status_output, audio_output],
     )
     
+    def clear_form():
+        """Clear all input and output fields."""
+        return "", "", None  # urls_input, status_output, audio_output
+    
     clear_button.click(
-        fn=lambda: ("", "", None),
+        fn=clear_form,
         inputs=[],
         outputs=[urls_input, status_output, audio_output],
     )
