@@ -1,6 +1,1 @@
-accelerate
-diffusers
-invisible_watermark
-torch
-transformers
-xformers
+gradio==5.44.0
