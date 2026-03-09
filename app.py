@@ -1,45 +1,45 @@
+import logging
+
 import gradio as gr
 
-# Placeholder function for podcast generation
-# This will be replaced with actual LLM and TTS agent implementation
+from podcast_generator import create_podcast
+
+logging.basicConfig(level=logging.INFO)
+
+
 def generate_podcast(urls_text, progress=gr.Progress(track_tqdm=True)):
-    """
-    Placeholder function for podcast generation.
-    
-    In the future, this will:
-    1. Parse the URLs from the input
-    2. Fetch and summarize articles/papers using LLM
-    3. Generate dialogue from summaries
-    4. Convert dialogue to audio using TTS
-    5. Return the audio file
-    
+    """Generate a podcast episode from one or more arXiv URLs.
+
     Args:
-        urls_text: Multi-line text containing URLs
-        progress: Gradio progress tracker
-    
+        urls_text: Multi-line text containing URLs (only the first arXiv URL
+            is used for the current episode).
+        progress: Gradio progress tracker.
+
     Returns:
-        Tuple of (status_message, audio_file_path)
+        Tuple of (status_message, audio_file_path).
     """
     if not urls_text or not urls_text.strip():
         return "⚠️ Please enter at least one URL", None
-    
-    # Parse URLs (split by newlines and filter empty lines)
-    urls = [url.strip() for url in urls_text.strip().split('\n') if url.strip()]
-    
+
+    urls = [u.strip() for u in urls_text.strip().splitlines() if u.strip()]
     if not urls:
         return "⚠️ Please enter at least one valid URL", None
-    
-    # Placeholder response
-    status_msg = f"✅ UI Ready! Found {len(urls)} URL(s):\n" + "\n".join(f"  • {url}" for url in urls)
-    status_msg += "\n\n⏳ Backend implementation pending (LLM summarization & TTS generation)"
-    
-    return status_msg, None
+
+    # Only the first URL is processed per episode
+    url = urls[0]
+
+    try:
+        status, audio_path = create_podcast(url, progress_callback=progress)
+        return status, audio_path
+    except Exception as exc:
+        logging.exception("Podcast generation failed")
+        return f"❌ Error: {exc}", None
 
 
 examples = [
-    "https://arxiv.org/abs/2301.00001\nhttps://example.com/article1",
-    "https://arxiv.org/abs/2312.12345",
-    "https://huggingface.co/blog/example-post\nhttps://medium.com/@example/article",
+    "https://arxiv.org/abs/1706.03762",
+    "https://arxiv.org/abs/2005.14165",
+    "https://arxiv.org/abs/2303.08774",
 ]
 
 css = """
@@ -54,12 +54,12 @@ with gr.Blocks(css=css, theme=gr.themes.Soft()) as demo:
         gr.Markdown(
             """
             # 🎧 Podcasting Agent
-            ### AI-powered podcast generation from articles and papers
-            
-            Enter URLs of articles or papers you want to hear discussed. The AI agent will:
-            1. 📄 Summarize the content using LLM
-            2. 💬 Generate engaging dialogue
-            3. 🎙️ Convert to audio using text-to-speech
+            ### AI-powered podcast generation from arXiv papers
+
+            Enter the URL of an arXiv paper. The agent will:
+            1. 📄 Fetch the paper metadata from arXiv
+            2. 💬 Generate an engaging two-host dialogue using **Qwen3.5-9B**
+            3. 🎙️ Synthesise the audio using **Qwen3-TTS** (two distinct voices)
             """
         )
 
@@ -97,7 +97,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft()) as demo:
         gr.Markdown(
             """
             ---
-            **Note:** This is the UI interface. Backend implementation for LLM summarization and TTS is pending.
+            **Hosts:** Alex (Ryan voice) · Jordan (Aiden voice) — powered by Qwen3-TTS
             """
         )
 
